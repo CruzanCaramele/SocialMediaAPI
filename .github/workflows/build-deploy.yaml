@@ -7,8 +7,32 @@ on:
     branches: ["main"]
 
 jobs:
-  job1:
+  build:
+    environment:
+      name: development
+    env:
+      ALGORITHM: ${{secrets.ALGORITHM}}
+      SECRET_KEY: ${{secrets.SECRET_KEY}}
+      DATABASE_NAME: ${{secrets.DATABASE_NAME}}
+      DATABASE_PORT: ${{secrets.DATABASE_PORT}}
+      DATABASE_HOSTNAME: ${{secrets.DATABASE_HOSTNAME}}
+      DATABASE_USERNAME: ${{secrets.DATABASE_USERNAME}}
+      DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${{secrets.ACCESS_TOKEN_EXPIRE_MINUTES}}
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: ${{secrets.DATABASE_NAME}}
+          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+        ports:
+        - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Pull Git Repo
         uses: actions/checkout@v2
@@ -20,3 +44,7 @@ jobs:
         run: python -m pip install --upgrade pip
       - name: Install Dependencies
         run: pip install -r requirements.txt
+      - name: Run Tests
+        run: |
+          pip install pytest
+          pytest
